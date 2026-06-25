@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Trophy, Wallet, Check } from "lucide-react";
+import { Copy, Pencil, Trophy, Wallet, Check } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge, VerifiedBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { Modal } from "@/components/ui/Modal";
 import { ChallengeCard } from "@/components/challenge/ChallengeCard";
 import { SubmissionRow } from "./SubmissionRow";
 import { challenges, me, submissions } from "@/lib/mock";
@@ -17,6 +18,9 @@ const tabs = ["Submissions", "Joined", "Created"] as const;
 export function UserProfileClient() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Submissions");
   const [copied, setCopied] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [name, setName] = useState(me.name);
+  const [bio, setBio] = useState(me.bio);
   const joined = challenges.slice(0, 6);
   const created = challenges.filter((c) => !c.official).slice(0, 3);
 
@@ -34,27 +38,32 @@ export function UserProfileClient() {
         <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/30 to-transparent" />
       </div>
 
-      <div className="-mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative z-10 -mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-end gap-4">
-          <Avatar src={me.avatar} alt={me.name} size={104} verified={me.xConnected} ring className="rounded-full bg-bg p-1" />
-          <div className="pb-1">
-            <h1 className="flex items-center gap-1.5 font-display text-2xl font-bold sm:text-3xl">
-              {me.name} {me.xConnected && <VerifiedBadge size={20} />}
+          <span className="shrink-0 rounded-full bg-bg p-1.5">
+            <Avatar src={me.avatar} alt={me.name} size={100} verified={me.xConnected} />
+          </span>
+          <div className="min-w-0 pb-1">
+            <h1 className="flex items-center gap-1.5 font-display text-2xl font-bold text-text drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] sm:text-3xl">
+              <span className="truncate">{name}</span>
+              {me.xConnected && <VerifiedBadge size={20} className="shrink-0" />}
             </h1>
             <p className="text-sm text-faint">@{me.handle}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <button onClick={copy} className="flex h-11 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-mono transition-colors hover:border-border-strong">
             <Wallet size={15} className="text-gold-bright" />
             {shortAddr(me.wallet)}
             {copied ? <Check size={14} className="text-green" /> : <Copy size={14} className="text-faint" />}
           </button>
-          <Button variant="outline">Edit profile</Button>
+          <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil size={15} /> Edit profile
+          </Button>
         </div>
       </div>
 
-      <p className="mt-4 max-w-xl text-[15px] text-muted">{me.bio}</p>
+      <p className="mt-4 max-w-xl text-[15px] text-muted">{bio}</p>
       {me.xConnected && (
         <Badge tone="blue" className="mt-3">𝕏 connected · @{me.handle}</Badge>
       )}
@@ -103,6 +112,49 @@ export function UserProfileClient() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Edit profile screen */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit profile">
+        <div className="space-y-5">
+          <div className="flex items-center gap-4">
+            <Avatar src={me.avatar} alt={me.name} size={64} verified={me.xConnected} />
+            <Button variant="outline" size="sm">Change avatar</Button>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[13px] font-medium text-muted">Display name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-12 w-full rounded-xl border border-border bg-surface px-3.5 text-sm outline-none focus:border-gold/50"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[13px] font-medium text-muted">Bio</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={3}
+              className="w-full resize-none rounded-xl border border-border bg-surface p-3.5 text-sm outline-none focus:border-gold/50"
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-xl bg-surface px-3.5 py-3">
+            <span className="flex items-center gap-2 text-[13px] text-muted">
+              <Wallet size={15} className="text-gold-bright" /> Wallet
+            </span>
+            <span className="font-mono text-[13px] text-green">{shortAddr(me.wallet)}</span>
+          </div>
+          <div className="flex items-center justify-between rounded-xl bg-surface px-3.5 py-3">
+            <span className="text-[13px] text-muted">𝕏 account</span>
+            <span className="font-mono text-[13px] text-blue">@{me.handle}</span>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button variant="ghost" className="flex-1" onClick={() => { setName(me.name); setBio(me.bio); setEditOpen(false); }}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={() => setEditOpen(false)}>Save changes</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
