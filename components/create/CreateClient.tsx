@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronLeft, ChevronRight, Clock, ImageIcon, PartyPopper, Users } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Clock, ImageIcon, PartyPopper, Upload, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -28,6 +28,7 @@ export function CreateClient() {
   const [published, setPublished] = useState(false);
 
   const [coverId, setCoverId] = useState(covers[0]);
+  const [customCover, setCustomCover] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [category, setCategory] = useState<Category>("Memes");
@@ -38,6 +39,17 @@ export function CreateClient() {
   const [subType, setSubType] = useState<SubmissionType>("X Post");
   const [rules, setRules] = useState("Original content only\nMust tag the project\n1 entry per account");
   const [tags, setTags] = useState("@yourproject");
+
+  const coverSrc = customCover ?? cover(coverId);
+
+  function onUploadCover(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => setCustomCover(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
 
   const pool = Math.round(amount * tokenUsd[token]);
   const canNext =
@@ -107,24 +119,54 @@ export function CreateClient() {
                 <>
                   <Field label="Cover image">
                     <div className="grid grid-cols-3 gap-2.5">
-                      {covers.map((id) => (
-                        <button
-                          key={id}
-                          onClick={() => setCoverId(id)}
-                          className={cn(
-                            "relative aspect-video overflow-hidden rounded-xl border-2 transition-colors",
-                            coverId === id ? "border-gold" : "border-transparent opacity-70 hover:opacity-100",
-                          )}
-                        >
-                          <img src={cover(id)} alt="" className="h-full w-full object-cover" />
-                          {coverId === id && (
+                      {/* upload your own */}
+                      <label
+                        className={cn(
+                          "relative flex aspect-video cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed text-faint transition-colors",
+                          customCover ? "border-gold" : "border-border-strong hover:border-gold/60 hover:text-muted",
+                        )}
+                      >
+                        {customCover ? (
+                          <>
+                            <img src={customCover} alt="Your cover" className="absolute inset-0 h-full w-full object-cover" />
                             <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-gold text-black">
                               <Check size={13} />
                             </span>
-                          )}
-                        </button>
-                      ))}
+                            <span className="relative rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
+                              Change
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={18} />
+                            <span className="text-[11px] font-medium">Upload</span>
+                          </>
+                        )}
+                        <input type="file" accept="image/*" onChange={onUploadCover} className="hidden" />
+                      </label>
+
+                      {covers.map((id) => {
+                        const selected = !customCover && coverId === id;
+                        return (
+                          <button
+                            key={id}
+                            onClick={() => { setCustomCover(null); setCoverId(id); }}
+                            className={cn(
+                              "relative aspect-video overflow-hidden rounded-xl border-2 transition-colors",
+                              selected ? "border-gold" : "border-transparent opacity-70 hover:opacity-100",
+                            )}
+                          >
+                            <img src={cover(id)} alt="" className="h-full w-full object-cover" />
+                            {selected && (
+                              <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-gold text-black">
+                                <Check size={13} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
+                    <p className="mt-2 text-[12px] text-faint">PNG / JPG / GIF · 16:9 looks best</p>
                   </Field>
                   <Field label="Title">
                     <Input value={title} onChange={setTitle} placeholder="e.g. BNB Chain Meme Mania" />
@@ -231,7 +273,7 @@ export function CreateClient() {
           </p>
           <div className="ring-grad overflow-hidden rounded-[22px] bg-surface">
             <div className="relative aspect-[16/11] overflow-hidden">
-              <img src={cover(coverId)} alt="" className="h-full w-full object-cover" />
+              <img src={coverSrc} alt="" className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent" />
               <div className="absolute inset-x-3 top-3 flex justify-between">
                 <Badge tone="neutral" className="bg-black/45 backdrop-blur border-white/10 text-white">{category}</Badge>
