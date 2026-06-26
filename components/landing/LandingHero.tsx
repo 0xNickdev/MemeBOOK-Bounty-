@@ -72,18 +72,7 @@ export function LandingHero() {
           className="relative mx-auto w-full max-w-[520px]"
         >
           <div className="pointer-events-none absolute inset-0 -z-10 bg-gold/12 blur-[120px]" />
-          <img
-            src="/hero-book.png"
-            alt="Memebook"
-            draggable={false}
-            className="w-full select-none"
-            style={{
-              WebkitMaskImage:
-                "radial-gradient(ellipse 78% 78% at 50% 50%, #000 62%, transparent 92%)",
-              maskImage:
-                "radial-gradient(ellipse 78% 78% at 50% 50%, #000 62%, transparent 92%)",
-            }}
-          />
+          <img src="/hero-book.png" alt="Memebook" draggable={false} className="w-full select-none" />
         </motion.div>
       </div>
 
